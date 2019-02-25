@@ -3,11 +3,15 @@
 // Global Variables
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
-const int thermistorPin = A0;               // Pin number for input from thermistor
+const int thermistorPin = A0;            // Pin number for input from thermistor
+const int ldrPin = A1;                   // Pin number for light dependent resistor
 
-int serialPrintCounter = 0;             // Serial Print Counter
-const int serialPrintInterval = 3;      // serialPrintInterval * delayTime = how often serial prints
-const int delayTime = 1000;             // in millisecond
+int serialPrintCounter = 0;              // Serial Print Counter
+const int serialPrintInterval = 1;       // serialPrintInterval * delayTime = how often serial prints
+const int delayTime = 1000;              // in millisecond
+
+const int MAX_ADC_READING = 1023;
+const int ADC_REF_VOLTAGE = 5;
 
 void setup() {  
   // Open Serial port. Set Baud rate to 9600
@@ -26,25 +30,28 @@ void setup() {
 }
 
 void loop() {
-  int sensorVal = analogRead(thermistorPin); // Value read from thermistor
-  /* convert the ADC reading to voltage
+  int thermistorSensorVal = analogRead(thermistorPin);
+  int ldrSensorVal = analogRead(ldrPin);
+  
+  /* convert the ADC reading to thermistorVoltage
   * The sensor has a bit depth of 2^10 = 1024.
   * The max voltage from the arduino is 5 [V}.
   * This formula came from the Arduino Projects book.
   */
-  float voltage = ( (float)sensorVal / 1024.0 ) * 5.0;   // [V]
   
-  /* convert the voltage to temperature in degrees. 
-   * This formula came from the Arduino Projects book
-   */
-  float temperature = (voltage - 0.5)*100;    // [degrees C]
+  float thermistorVoltage = ( (float)thermistorSensorVal / MAX_ADC_READING ) * ADC_REF_VOLTAGE;   // [V]
+  float resistorVoltage = ( (float)ldrSensorVal / MAX_ADC_READING ) * ADC_REF_VOLTAGE;   // [V]
+  float ldrVoltage = 5.0 - resistorVoltage;
+  float ldrResistance = (ldrVoltage/resistorVoltage)*10000; //10k is resistor value
+  
+  float temperature = (thermistorVoltage - 0.5)*100;    // [degrees C]
   int toSerialPort = serialPrintCounter % serialPrintInterval;
   //Serial.println((String)toSerialPort);
   if (toSerialPort == 0){
     // Send message every serialPrintInterval minutes if delay(60000) at end of loop()
-    String message = "@Sensor Value:  " + String(sensorVal) + 
-                     ", Volts:  " + String(voltage) + 
-                     ", degrees C: " + String(temperature);
+    String message = "@degrees C: " + String(temperature) +
+                     ", ldr sensor val: " + String(ldrSensorVal) + 
+                     ", ldr resistance in Ohms: " + String(ldrResistance);
     Serial.println(message);
   }
 
@@ -58,14 +65,30 @@ void loop() {
     B00000,
     B00000, 
   };
+
+  byte omega[8] = {
+    B01110,
+    B10001,
+    B10001,
+    B10001,
+    B10001,
+    B01010,
+    B01010,
+    B11011, 
+  };
+  
   lcd.createChar(0, degreeSymbol);
+  lcd.createChar(1, omega);
   // Update LCD display
   lcd.clear();
   lcd.print("Temp: " + String((int)temperature));
   lcd.write(byte(0));
   lcd.print("C");
+  lcd.setCursor(0,1);
+  lcd.print("LDR: " + String(ldrResistance));
+  lcd.write(byte(1));
   
-  // Wait to updaten LED display
+  // Wait to update LCD display
   delay(delayTime);
   serialPrintCounter++;
 }
