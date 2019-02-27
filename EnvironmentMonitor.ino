@@ -1,4 +1,5 @@
 #include <LiquidCrystal.h>
+#include <math.h>
 
 // Global Variables
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
@@ -85,8 +86,26 @@ void loop() {
   lcd.write(byte(0));
   lcd.print("C");
   lcd.setCursor(0,1);
-  lcd.print("LDR: " + String(ldrResistance));
-  lcd.write(byte(1));
+
+  String prefix = " ";
+  if (ldrResistance > 1000000000){
+    ldrResistance = ldrResistance / 1000000000;
+    prefix = "G";
+  } else if (ldrResistance > 1000000){
+    ldrResistance = ldrResistance / 1000000;
+    prefix = "M";
+  } else if (ldrResistance > 1000){
+    ldrResistance = ldrResistance / 1000;
+    prefix = "k";
+  }
+
+  if (prefix != " "){
+    lcd.print("LDR: "  + String(ldrResistance) + prefix);
+    lcd.write(byte(1));
+  } else {
+    lcd.print("LDR: "  + String(ldrResistance));
+    lcd.write(byte(1));
+  }
   
   // Wait to update LCD display
   delay(delayTime);
