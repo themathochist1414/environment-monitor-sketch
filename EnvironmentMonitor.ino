@@ -9,7 +9,7 @@ const int ldrPin = A1;                   // Pin number for light dependent resis
 
 int serialPrintCounter = 0;              // Serial Print Counter
 const int serialPrintInterval = 1;       // serialPrintInterval * delayTime = how often serial prints
-const int delayTime = 1000;              // in millisecond
+const long delayTime = 60000;              // in millisecond
 
 const int MAX_ADC_READING = 1023;
 const int ADC_REF_VOLTAGE = 5;
