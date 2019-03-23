@@ -1,5 +1,4 @@
 #include <LiquidCrystal.h>
-#include <math.h>
 
 // Global Variables
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
@@ -8,7 +7,7 @@ const int thermistorPin = A0;            // Pin number for input from thermistor
 const int ldrPin = A1;                   // Pin number for light dependent resistor
 
 int serialPrintCounter = 0;              // Serial Print Counter
-const int serialPrintInterval = 1;       // serialPrintInterval * delayTime = how often serial prints
+const int serialPrintInterval = 15;       // serialPrintInterval * delayTime = how often serial prints
 const long delayTime = 60000;              // in millisecond
 
 const int MAX_ADC_READING = 1023;
@@ -22,11 +21,16 @@ void setup() {
 
   // intialize LCD display size
   lcd.begin(16,2);
+
+  // initialize pin 8 to power LCD
+  pinMode(8, OUTPUT);
+  digitalWrite(8, HIGH);
   
   // print startup message to LCD display
   lcd.print("Arduino");
   lcd.setCursor(0,1);
   lcd.print("Starting Up...");
+
   delay(3000);
 }
 
