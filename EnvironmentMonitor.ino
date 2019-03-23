@@ -8,9 +8,13 @@ const int LDR_PIN = A1;                   // Pin number for light dependent resi
 const int BUTTON_PIN = 13;
 const int LCD_POWER_PIN = 8;
 
-int serialPrintCounter = 0;              // Serial Print Counter
-const int SERIAL_PRINT_INTERVAL = 15;       // SERIAL_PRINT_INTERVAL * DELAY_TIME = how often serial prints
-const long DELAY_TIME = 60000;              // in millisecond
+unsigned long START_MILLIS_SERIAL;
+unsigned long START_MILLIS_LCD;
+unsigned long CURRENT_MILLIS;
+
+
+const unsigned long LCD_PERIOD = 1000;              // in millisecond
+const unsigned long SERIAL_PERIOD = 15*LCD_PERIOD;       // how often serial prints
 
 const int MAX_ADC_READING = 1023;
 const int ADC_REF_VOLTAGE = 5;
@@ -21,7 +25,11 @@ int buttonState = 0;
 
 const int SERIAL_DATA_ARRAY_SIZE = 3;
 
+boolean firstRun = true;
+
 void setup() {  
+  START_MILLIS_SERIAL = millis();  // initial start time
+  START_MILLIS_LCD = millis();  // initial start time
   // Open Serial port. Set Baud rate to 9600
   Serial.begin(9600);
   // Send out startup phrase
@@ -53,24 +61,44 @@ void loop() {
   * The max voltage from the arduino is 5 [V}.
   * This formula came from the Arduino Projects book.
   */
-  
+  // figure out temperature
   float thermistorVoltage = ( (float)thermistorSensorVal / MAX_ADC_READING ) * ADC_REF_VOLTAGE;   // [V]
+  float temperature = (thermistorVoltage - 0.5)*100;    // [degrees C]
+
+  // figure out ldrResistance
   float resistorVoltage = ( (float)ldrSensorVal / MAX_ADC_READING ) * ADC_REF_VOLTAGE;   // [V]
   float ldrVoltage = 5.0 - resistorVoltage;
   float ldrResistance = (ldrVoltage/resistorVoltage)*10000; //10k is resistor value
-  
-  float temperature = (thermistorVoltage - 0.5)*100;    // [degrees C]
-  int toSerialPort = serialPrintCounter % SERIAL_PRINT_INTERVAL;
+
+  // package data to send to serial
   String data0 = String("degrees C: " + String(temperature));
   String data1 = String("ldr sensor val: " + String(ldrSensorVal));
   String data2 = String("ldr resistance val: " + String(ldrResistance));
   String serialData[SERIAL_DATA_ARRAY_SIZE] = {data0, data1, data2};
   
-  //Serial.println((String)toSerialPort);
-  if (toSerialPort == 0){
-    // Send message every SERIAL_PRINT_INTERVAL minutes if delay(60000) at end of loop()
+  CURRENT_MILLIS = millis();
+  if ((CURRENT_MILLIS - START_MILLIS_SERIAL >= SERIAL_PERIOD)||(firstRun)){
     printDataToSerial(serialData);
+    START_MILLIS_SERIAL = CURRENT_MILLIS;
   }
+  
+  if ((CURRENT_MILLIS - START_MILLIS_LCD >= LCD_PERIOD)||(firstRun)){
+    printInfoToLCD(temperature, ldrResistance);
+    START_MILLIS_LCD = CURRENT_MILLIS;
+    firstRun = false;
+  }
+}
+
+void printDataToSerial(String serialData[]){
+  String message = "@";
+  for (int i = 0; i < SERIAL_DATA_ARRAY_SIZE; i++){
+    if (i != SERIAL_DATA_ARRAY_SIZE -1) message += serialData[i] + " , ";
+    else message += serialData[i];
+  }
+  Serial.println(message);
+}
+
+void printInfoToLCD(int temperature, int ldrResistance){
   byte degreeSymbol[8] = {
     B00111,
     B00101,
@@ -118,17 +146,4 @@ void loop() {
     lcd.print("LDR: "  + String(ldrResistance));
     lcd.write(byte(1));
   }
-  
-  // Wait to update LCD display
-  delay(500);
-  serialPrintCounter++;
-}
-
-void printDataToSerial(String serialData[]){
-  String message = "@";
-  for (int i = 0; i < SERIAL_DATA_ARRAY_SIZE; i++){
-    if (i != SERIAL_DATA_ARRAY_SIZE -1) message += serialData[i] + " , ";
-    else message += serialData[i];
-  }
-  Serial.println(message);
 }
