@@ -5,6 +5,8 @@ LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
 const int thermistorPin = A0;            // Pin number for input from thermistor
 const int ldrPin = A1;                   // Pin number for light dependent resistor
+const int buttonPin = 13;
+const int LCDpowerPin = 8;
 
 int serialPrintCounter = 0;              // Serial Print Counter
 const int serialPrintInterval = 15;       // serialPrintInterval * delayTime = how often serial prints
@@ -12,6 +14,12 @@ const long delayTime = 60000;              // in millisecond
 
 const int MAX_ADC_READING = 1023;
 const int ADC_REF_VOLTAGE = 5;
+
+boolean firstButtonPress = false;
+boolean secondButtonPress = false;
+int buttonState = 0;
+
+const int SERIAL_DATA_ARRAY_SIZE = 3;
 
 void setup() {  
   // Open Serial port. Set Baud rate to 9600
@@ -23,14 +31,16 @@ void setup() {
   lcd.begin(16,2);
 
   // initialize pin 8 to power LCD
-  pinMode(8, OUTPUT);
-  digitalWrite(8, HIGH);
+  pinMode(LCDpowerPin, OUTPUT);
+  digitalWrite(LCDpowerPin, HIGH);
+
+  // initialize pin 13 to listen for button press
+  pinMode(buttonPin, INPUT);
   
   // print startup message to LCD display
   lcd.print("Arduino");
   lcd.setCursor(0,1);
   lcd.print("Starting Up...");
-
   delay(3000);
 }
 
@@ -51,15 +61,16 @@ void loop() {
   
   float temperature = (thermistorVoltage - 0.5)*100;    // [degrees C]
   int toSerialPort = serialPrintCounter % serialPrintInterval;
+  String data0 = String("degrees C: " + String(temperature));
+  String data1 = String("ldr sensor val: " + String(ldrSensorVal));
+  String data2 = String("ldr resistance val: " + String(ldrResistance));
+  String serialData[SERIAL_DATA_ARRAY_SIZE] = {data0, data1, data2};
+  
   //Serial.println((String)toSerialPort);
   if (toSerialPort == 0){
     // Send message every serialPrintInterval minutes if delay(60000) at end of loop()
-    String message = "@degrees C: " + String(temperature) +
-                     ", ldr sensor val: " + String(ldrSensorVal) + 
-                     ", ldr resistance in Ohms: " + String(ldrResistance);
-    Serial.println(message);
+    printToSerial(serialData);
   }
-
   byte degreeSymbol[8] = {
     B00111,
     B00101,
@@ -109,6 +120,15 @@ void loop() {
   }
   
   // Wait to update LCD display
-  delay(delayTime);
+  delay(500);
   serialPrintCounter++;
+}
+
+void printToSerial(String serialData[]){
+  String message = "@";
+  for (int i = 0; i < SERIAL_DATA_ARRAY_SIZE; i++){
+    if (i != SERIAL_DATA_ARRAY_SIZE -1) message += serialData[i] + " , ";
+    else message += serialData[i];
+  }
+  Serial.println(message);
 }
