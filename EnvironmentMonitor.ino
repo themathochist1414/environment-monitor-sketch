@@ -65,9 +65,9 @@ void loop() {
   float temperature = (thermistorVoltage - 0.5)*100;    // [degrees C]
 
   // figure out ldrResistance
-  float resistorVoltage = ( (float)ldrSensorVal / MAX_ADC_READING ) * ADC_REF_VOLTAGE;   // [V]
-  float ldrVoltage = 5.0 - resistorVoltage;
-  float ldrResistance = (ldrVoltage/resistorVoltage)*10000; //10k is resistor value
+  double resistorVoltage = ( (double)ldrSensorVal / MAX_ADC_READING ) * ADC_REF_VOLTAGE;   // [V]
+  double ldrVoltage = 5.0 - resistorVoltage;
+  double ldrResistance = (ldrVoltage/resistorVoltage)*10000; //10k is resistor value
 
   // package data to send to serial
   String data0 = String("degrees C: " + String(temperature));
@@ -114,7 +114,7 @@ void printDataToSerial(String serialData[]){
   Serial.println(message);
 }
 
-void printInfoToLCD(int temperature, int ldrResistance){
+void printInfoToLCD(int temperature, long ldrResistance){
   byte degreeSymbol[8] = {
     B00111,
     B00101,
@@ -146,20 +146,22 @@ void printInfoToLCD(int temperature, int ldrResistance){
   lcd.print("C");
   lcd.setCursor(0,1);
 
+  double ldrDouble = ldrResistance;
+  
   String prefix = " ";
   if (ldrResistance > 1000000){
-    ldrResistance = ldrResistance / 1000000;
+    ldrDouble = ((double)ldrResistance) / 1000000.0;
     prefix = "M";
   } else if (ldrResistance > 1000){
-    ldrResistance = ldrResistance / 1000;
+    ldrDouble = ((double)ldrResistance) / 1000.0;
     prefix = "k";
   }
 
   if (prefix != " "){
-    lcd.print("LDR: "  + String(ldrResistance) + prefix);
+    lcd.print("LDR: "  + String(ldrDouble) + prefix);
     lcd.write(byte(1));
   } else {
-    lcd.print("LDR: "  + String(ldrResistance));
+    lcd.print("LDR: "  + String(ldrDouble));
     lcd.write(byte(1));
   }
 }
