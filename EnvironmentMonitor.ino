@@ -5,13 +5,15 @@ LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
 const int THERMISTOR_PIN = A0;            // Pin number for input from thermistor
 const int LDR_PIN = A1;                   // Pin number for light dependent resistor
-const int BUTTON_PIN = 13;
+
 const int LCD_POWER_PIN = 8;
 
 unsigned long START_MILLIS_SERIAL;
-unsigned long START_MILLIS_LCD;
 unsigned long CURRENT_MILLIS;
 
+unsigned long START_MILLIS_LCD;
+unsigned long LCD_TIMER = 0;
+const unsigned long LCD_TIMEOUT = 5000; // in milliseconds
 
 const unsigned long LCD_PERIOD = 1000;              // in millisecond
 const unsigned long SERIAL_PERIOD = 15*LCD_PERIOD;       // how often serial prints
@@ -19,9 +21,9 @@ const unsigned long SERIAL_PERIOD = 15*LCD_PERIOD;       // how often serial pri
 const int MAX_ADC_READING = 1023;
 const int ADC_REF_VOLTAGE = 5;
 
-boolean firstButtonPress = false;
-boolean secondButtonPress = false;
-int buttonState = 0;
+const int BUTTON_PIN = 13;
+int currentButtonState = 0;
+int previousButtonState = 0;
 
 const int SERIAL_DATA_ARRAY_SIZE = 3;
 
@@ -29,7 +31,6 @@ boolean firstRun = true;
 
 void setup() {  
   START_MILLIS_SERIAL = millis();  // initial start time
-  START_MILLIS_LCD = millis();  // initial start time
   // Open Serial port. Set Baud rate to 9600
   Serial.begin(9600);
   // Send out startup phrase
@@ -57,8 +58,6 @@ void loop() {
   int ldrSensorVal = analogRead(LDR_PIN);
   
   /* convert the ADC reading to thermistorVoltage
-  * The sensor has a bit depth of 2^10 = 1024.
-  * The max voltage from the arduino is 5 [V}.
   * This formula came from the Arduino Projects book.
   */
   // figure out temperature
@@ -81,11 +80,28 @@ void loop() {
     printDataToSerial(serialData);
     START_MILLIS_SERIAL = CURRENT_MILLIS;
   }
-  
-  if ((CURRENT_MILLIS - START_MILLIS_LCD >= LCD_PERIOD)||(firstRun)){
+
+  if (firstRun){
     printInfoToLCD(temperature, ldrResistance);
-    START_MILLIS_LCD = CURRENT_MILLIS;
     firstRun = false;
+    delay(3000); // wait 3 seconds
+    turnOffLCD();
+  }
+  currentButtonState = digitalRead(BUTTON_PIN);
+  //Serial.println(String(currentButtonState));
+  //Serial.println(String(currentButtonState) + " " + String(previousButtonState));
+  if ((currentButtonState == HIGH)&&(previousButtonState == LOW)){
+    previousButtonState = currentButtonState;
+    digitalWrite(LCD_POWER_PIN, HIGH);
+    printInfoToLCD(temperature, ldrResistance);
+    START_MILLIS_LCD = millis();  // initial start time
+  } else if ((currentButtonState == LOW)&&(previousButtonState == HIGH)){
+    //Serial.println(String(CURRENT_MILLIS - START_MILLIS_LCD));
+    if (CURRENT_MILLIS - START_MILLIS_LCD >= LCD_TIMEOUT){
+      turnOffLCD();
+      START_MILLIS_LCD = millis();
+      previousButtonState = currentButtonState;
+    }
   }
 }
 
@@ -146,4 +162,9 @@ void printInfoToLCD(int temperature, int ldrResistance){
     lcd.print("LDR: "  + String(ldrResistance));
     lcd.write(byte(1));
   }
+}
+
+void turnOffLCD(){
+  digitalWrite(LCD_POWER_PIN, LOW); 
+  lcd.clear();
 }
