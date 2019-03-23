@@ -92,10 +92,7 @@ void loop() {
   lcd.setCursor(0,1);
 
   String prefix = " ";
-  if (ldrResistance > 1000000000){
-    ldrResistance = ldrResistance / 1000000000;
-    prefix = "G";
-  } else if (ldrResistance > 1000000){
+  if (ldrResistance > 1000000){
     ldrResistance = ldrResistance / 1000000;
     prefix = "M";
   } else if (ldrResistance > 1000){
