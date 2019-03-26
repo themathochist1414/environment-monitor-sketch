@@ -21,7 +21,7 @@ const unsigned long SERIAL_PERIOD = 15*LCD_PERIOD;       // how often serial pri
 const int MAX_ADC_READING = 1023;
 const int ADC_REF_VOLTAGE = 5;
 
-const int BUTTON_PIN = 13;
+const int BUTTON_PIN = 7;
 int currentButtonState = 0;
 int previousButtonState = 0;
 
@@ -43,7 +43,7 @@ void setup() {
   pinMode(LCD_POWER_PIN, OUTPUT);
   digitalWrite(LCD_POWER_PIN, HIGH);
 
-  // initialize pin 13 to listen for button press
+  // initialize pin to listen for button press
   pinMode(BUTTON_PIN, INPUT);
   
   // print startup message to LCD display
@@ -51,6 +51,7 @@ void setup() {
   lcd.setCursor(0,1);
   lcd.print("Starting Up...");
   delay(3000);
+  lcd.clear();
 }
 
 void loop() {
@@ -139,11 +140,12 @@ void printInfoToLCD(int temperature, long ldrResistance){
   
   lcd.createChar(0, degreeSymbol);
   lcd.createChar(1, omega);
+  
   // Update LCD display
   lcd.clear();
-  lcd.print("Temp: " + String((int)temperature));
+  lcd.print(String(String("Temp: ") + String((int)temperature)));
   lcd.write(byte(0));
-  lcd.print("C");
+  lcd.print(String("C"));
   lcd.setCursor(0,1);
 
   double ldrDouble = ldrResistance;
@@ -151,22 +153,22 @@ void printInfoToLCD(int temperature, long ldrResistance){
   String prefix = " ";
   if (ldrResistance > 1000000){
     ldrDouble = ((double)ldrResistance) / 1000000.0;
-    prefix = "M";
+    prefix = String("M");
   } else if (ldrResistance > 1000){
     ldrDouble = ((double)ldrResistance) / 1000.0;
-    prefix = "k";
+    prefix = String("k");
   }
 
   if (prefix != " "){
-    lcd.print("LDR: "  + String(ldrDouble) + prefix);
+    lcd.print(String(String("LDR: ")  + String(ldrDouble, 2) + prefix));
     lcd.write(byte(1));
   } else {
-    lcd.print("LDR: "  + String(ldrDouble));
+    lcd.print(String(String("LDR: ")  + String(ldrDouble, 2)));
     lcd.write(byte(1));
   }
 }
 
 void turnOffLCD(){
-  digitalWrite(LCD_POWER_PIN, LOW); 
   lcd.clear();
+  digitalWrite(LCD_POWER_PIN, LOW); 
 }
