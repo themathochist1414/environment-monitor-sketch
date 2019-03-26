@@ -83,7 +83,7 @@ void loop() {
   }
 
   if (firstRun){
-    printInfoToLCD(temperature, ldrResistance);
+    printDataToLCD(temperature, ldrResistance);
     firstRun = false;
     delay(3000); // wait 3 seconds
     turnOffLCD();
@@ -94,7 +94,7 @@ void loop() {
   if ((currentButtonState == HIGH)&&(previousButtonState == LOW)){
     previousButtonState = currentButtonState;
     digitalWrite(LCD_POWER_PIN, HIGH);
-    printInfoToLCD(temperature, ldrResistance);
+    printDataToLCD(temperature, ldrResistance);
     startMillisLCD = millis();  // initial start time
   } else if ((currentButtonState == LOW)&&(previousButtonState == HIGH)){
     //Serial.println(String(currentMillis - startMillisLCD));
@@ -115,7 +115,7 @@ void printDataToSerial(String serialData[]){
   Serial.println(message);
 }
 
-void printDataToLCD(int temperature, double ldrResistance){
+void printDataToLCD(int temperature, long ldrResistance){
   byte degreeSymbol[8] = {
     B00111,
     B00101,
@@ -157,11 +157,14 @@ void printDataToLCD(int temperature, double ldrResistance){
   } else if (ldrResistance > 1000){
     ldrDouble = (ldrResistance) / 1000.0;
     prefix = String("k");
-  } else if (){
-    
+  } else if (ldrResistance < 0){
+    prefix = "OL";
   }
-
-  if (prefix != " "){
+  Serial.println(prefix);
+  if (prefix.equals("OL")){
+    lcd.print(String("LDR: INF"));
+    lcd.write(byte(1));
+  } else if (!prefix.equals(" ")){
     lcd.print(String(String("LDR: ")  + String(ldrDouble, 2) + prefix));
     lcd.write(byte(1));
   } else {
