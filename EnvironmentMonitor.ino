@@ -115,7 +115,7 @@ void printDataToSerial(String serialData[]){
   Serial.println(message);
 }
 
-void printInfoToLCD(int temperature, long ldrResistance){
+void printDataToLCD(int temperature, double ldrResistance){
   byte degreeSymbol[8] = {
     B00111,
     B00101,
@@ -152,11 +152,13 @@ void printInfoToLCD(int temperature, long ldrResistance){
   
   String prefix = " ";
   if (ldrResistance > 1000000){
-    ldrDouble = ((double)ldrResistance) / 1000000.0;
+    ldrDouble = (ldrResistance) / 1000000.0;
     prefix = String("M");
   } else if (ldrResistance > 1000){
-    ldrDouble = ((double)ldrResistance) / 1000.0;
+    ldrDouble = (ldrResistance) / 1000.0;
     prefix = String("k");
+  } else if (){
+    
   }
 
   if (prefix != " "){
