@@ -8,10 +8,10 @@ const int LDR_PIN = A1;                   // Pin number for light dependent resi
 
 const int LCD_POWER_PIN = 8;
 
-unsigned long START_MILLIS_SERIAL;
-unsigned long CURRENT_MILLIS;
+unsigned long startMillisSerial;
+unsigned long currentMillis;
 
-unsigned long START_MILLIS_LCD;
+unsigned long startMillisLCD;
 unsigned long LCD_TIMER = 0;
 const unsigned long LCD_TIMEOUT = 5000; // in milliseconds
 
@@ -30,7 +30,7 @@ const int SERIAL_DATA_ARRAY_SIZE = 3;
 boolean firstRun = true;
 
 void setup() {  
-  START_MILLIS_SERIAL = millis();  // initial start time
+  startMillisSerial = millis();  // initial start time
   // Open Serial port. Set Baud rate to 9600
   Serial.begin(9600);
   // Send out startup phrase
@@ -76,10 +76,10 @@ void loop() {
   String data2 = String("ldr resistance val: " + String(ldrResistance));
   String serialData[SERIAL_DATA_ARRAY_SIZE] = {data0, data1, data2};
   
-  CURRENT_MILLIS = millis();
-  if ((CURRENT_MILLIS - START_MILLIS_SERIAL >= SERIAL_PERIOD)||(firstRun)){
+  currentMillis = millis();
+  if ((currentMillis - startMillisSerial >= SERIAL_PERIOD)||(firstRun)){
     printDataToSerial(serialData);
-    START_MILLIS_SERIAL = CURRENT_MILLIS;
+    startMillisSerial = currentMillis;
   }
 
   if (firstRun){
@@ -95,12 +95,12 @@ void loop() {
     previousButtonState = currentButtonState;
     digitalWrite(LCD_POWER_PIN, HIGH);
     printInfoToLCD(temperature, ldrResistance);
-    START_MILLIS_LCD = millis();  // initial start time
+    startMillisLCD = millis();  // initial start time
   } else if ((currentButtonState == LOW)&&(previousButtonState == HIGH)){
-    //Serial.println(String(CURRENT_MILLIS - START_MILLIS_LCD));
-    if (CURRENT_MILLIS - START_MILLIS_LCD >= LCD_TIMEOUT){
+    //Serial.println(String(currentMillis - startMillisLCD));
+    if (currentMillis - startMillisLCD >= LCD_TIMEOUT){
       turnOffLCD();
-      START_MILLIS_LCD = millis();
+      startMillisLCD = millis();
       previousButtonState = currentButtonState;
     }
   }
