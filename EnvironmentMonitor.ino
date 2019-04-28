@@ -22,8 +22,6 @@ unsigned long startMillisLCD;
 int currentButtonState = 0;
 int previousButtonState = 0;
 
-boolean firstRun = true;
-
 byte degreeSymbol[8] = {
     B00111,
     B00101,
@@ -48,7 +46,6 @@ byte omega[8] = {
 
 void setup()
 {
-    startMillisSerial = millis();  // initial start time
     // Open Serial port. Set Baud rate to 9600
     Serial.begin(9600);
     // Send out startup phrase
@@ -70,6 +67,21 @@ void setup()
     lcd.print("Starting Up...");
     delay(3000);
     lcd.clear();
+
+    // initial reading
+    float temperature = readTemperature();
+    double ldrResistance = readLightLevel();
+
+    // package data to send to serial
+    String data0 = String("degrees C: " + String(temperature));
+    String data1 = String("ldr resistance: " + String(ldrResistance));
+    String serialData[SERIAL_DATA_ARRAY_SIZE] = {data0, data1};
+
+    printDataToSerial(serialData);
+    startMillisSerial = millis();  // initial start time
+    printDataToLCD(temperature,ldrResistance);
+    delay(LCD_TIMEOUT);
+    turnOffLCD();
 }
 
 void loop()
@@ -82,19 +94,12 @@ void loop()
     String serialData[SERIAL_DATA_ARRAY_SIZE] = {data0, data1};
 
     currentMillis = millis();
-    if ((currentMillis - startMillisSerial >= SERIAL_PERIOD)||(firstRun))
+    if (currentMillis - startMillisSerial >= SERIAL_PERIOD)
     {
         printDataToSerial(serialData);
         startMillisSerial = currentMillis;
     }
 
-    if (firstRun)
-    {
-        printDataToLCD(temperature, ldrResistance);
-        firstRun = false;
-        delay(3000); // wait 3 seconds
-        turnOffLCD();
-    }
     currentButtonState = digitalRead(BUTTON_PIN);
     //Serial.println(String(currentButtonState));
     //Serial.println(String(currentButtonState) + " " + String(previousButtonState));
