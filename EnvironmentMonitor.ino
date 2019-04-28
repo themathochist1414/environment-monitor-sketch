@@ -24,6 +24,28 @@ int previousButtonState = 0;
 
 boolean firstRun = true;
 
+byte degreeSymbol[8] = {
+  B00111,
+  B00101,
+  B00111,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+};
+
+byte omega[8] = {
+  B01110,
+  B10001,
+  B10001,
+  B10001,
+  B10001,
+  B01010,
+  B01010,
+  B11011,
+};
+
 void setup() {
   startMillisSerial = millis();  // initial start time
   // Open Serial port. Set Baud rate to 9600
@@ -111,27 +133,6 @@ void printDataToSerial(String serialData[]){
 }
 
 void printDataToLCD(int temperature, long ldrResistance){
-  byte degreeSymbol[8] = {
-    B00111,
-    B00101,
-    B00111,
-    B00000,
-    B00000,
-    B00000,
-    B00000,
-    B00000,
-  };
-
-  byte omega[8] = {
-    B01110,
-    B10001,
-    B10001,
-    B10001,
-    B10001,
-    B01010,
-    B01010,
-    B11011,
-  };
 
   lcd.createChar(0, degreeSymbol);
   lcd.createChar(1, omega);
