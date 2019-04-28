@@ -74,14 +74,8 @@ void setup()
 
 void loop()
 {
-    int temperature = readTemperature();
-    int ldrSensorVal = analogRead(LDR_PIN);
-
-    // figure out ldrResistance
-    double resistorVoltage = ( (double)ldrSensorVal / MAX_ADC_READING ) * ADC_REF_VOLTAGE;   // [V]
-    double ldrVoltage = 5.0 - resistorVoltage;
-    double ldrResistance = (ldrVoltage/resistorVoltage)*10000; //10k is resistor value
-
+    float temperature = readTemperature();
+    double ldrResistance = readLightLevel();
     // package data to send to serial
     String data0 = String("degrees C: " + String(temperature));
     String data1 = String("ldr resistance: " + String(ldrResistance));
@@ -132,6 +126,17 @@ float readTemperature()
     float thermistorVoltage = ( (float)thermistorSensorVal / MAX_ADC_READING ) * ADC_REF_VOLTAGE;   // [V]
     float temperature = (thermistorVoltage - 0.5)*100;    // [degrees C]
     return temperature;
+}
+
+double readLightLevel()
+{
+    int ldrSensorVal = analogRead(LDR_PIN);
+
+    // figure out ldrResistance
+    double resistorVoltage = ( (double)ldrSensorVal / MAX_ADC_READING ) * ADC_REF_VOLTAGE;   // [V]
+    double ldrVoltage = 5.0 - resistorVoltage;
+    double ldrResistance = (ldrVoltage/resistorVoltage)*10000; //10k is resistor value
+    return ldrResistance;
 }
 
 void printDataToSerial(String serialData[])
