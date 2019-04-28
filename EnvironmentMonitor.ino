@@ -74,15 +74,8 @@ void setup()
 
 void loop()
 {
-    int thermistorSensorVal = analogRead(THERMISTOR_PIN);
+    int temperature = readTemperature();
     int ldrSensorVal = analogRead(LDR_PIN);
-
-    /* convert the ADC reading to thermistorVoltage
-    * This formula came from the Arduino Projects book.
-    */
-    // figure out temperature
-    float thermistorVoltage = ( (float)thermistorSensorVal / MAX_ADC_READING ) * ADC_REF_VOLTAGE;   // [V]
-    float temperature = (thermistorVoltage - 0.5)*100;    // [degrees C]
 
     // figure out ldrResistance
     double resistorVoltage = ( (double)ldrSensorVal / MAX_ADC_READING ) * ADC_REF_VOLTAGE;   // [V]
@@ -129,7 +122,17 @@ void loop()
     }
 }
 
-
+float readTemperature()
+{
+    int thermistorSensorVal = analogRead(THERMISTOR_PIN);
+    /* convert the ADC reading to thermistorVoltage
+    * This formula came from the Arduino Projects book.
+    */
+    // figure out temperature
+    float thermistorVoltage = ( (float)thermistorSensorVal / MAX_ADC_READING ) * ADC_REF_VOLTAGE;   // [V]
+    float temperature = (thermistorVoltage - 0.5)*100;    // [degrees C]
+    return temperature;
+}
 
 void printDataToSerial(String serialData[])
 {
