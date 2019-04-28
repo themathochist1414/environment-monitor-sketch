@@ -1,35 +1,30 @@
 #include <LiquidCrystal.h>
 
+#define THERMISTOR_PIN          A0              // Pin number for input from thermistor
+#define LDR_PIN                 A1              // Pin number for light dependent resistor
+#define LCD_POWER_PIN           8               // Pin number to toggle power to LCD screen
+#define LCD_TIMEOUT             5000            // milliseconds until screen turns off
+#define LCD_PERIOD              1000            // in milliseconds
+#define SERIAL_PERIOD           1*LCD_PERIOD    // how often serial prints
+#define MAX_ADC_READING         1023            // max num` on analog to digital converter
+#define ADC_REF_VOLTAGE         5               // max voltage that could appear on ADC
+#define BUTTON_PIN              7               // pin number for button input
+#define SERIAL_DATA_ARRAY_SIZE  3               // how many pieces of data sent to serial
+
 // Global Variables
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
-
-const int THERMISTOR_PIN = A0;            // Pin number for input from thermistor
-const int LDR_PIN = A1;                   // Pin number for light dependent resistor
-
-const int LCD_POWER_PIN = 8;
 
 unsigned long startMillisSerial;
 unsigned long currentMillis;
 
 unsigned long startMillisLCD;
-unsigned long LCD_TIMER = 0;
-const unsigned long LCD_TIMEOUT = 5000; // in milliseconds
 
-const unsigned long LCD_PERIOD = 1000;              // in millisecond
-const unsigned long SERIAL_PERIOD = 15*LCD_PERIOD;       // how often serial prints
-
-const int MAX_ADC_READING = 1023;
-const int ADC_REF_VOLTAGE = 5;
-
-const int BUTTON_PIN = 7;
 int currentButtonState = 0;
 int previousButtonState = 0;
 
-const int SERIAL_DATA_ARRAY_SIZE = 3;
-
 boolean firstRun = true;
 
-void setup() {  
+void setup() {
   startMillisSerial = millis();  // initial start time
   // Open Serial port. Set Baud rate to 9600
   Serial.begin(9600);
@@ -45,7 +40,7 @@ void setup() {
 
   // initialize pin to listen for button press
   pinMode(BUTTON_PIN, INPUT);
-  
+
   // print startup message to LCD display
   lcd.print("Arduino");
   lcd.setCursor(0,1);
@@ -57,7 +52,7 @@ void setup() {
 void loop() {
   int thermistorSensorVal = analogRead(THERMISTOR_PIN);
   int ldrSensorVal = analogRead(LDR_PIN);
-  
+
   /* convert the ADC reading to thermistorVoltage
   * This formula came from the Arduino Projects book.
   */
@@ -75,7 +70,7 @@ void loop() {
   String data1 = String("ldr sensor val: " + String(ldrSensorVal));
   String data2 = String("ldr resistance val: " + String(ldrResistance));
   String serialData[SERIAL_DATA_ARRAY_SIZE] = {data0, data1, data2};
-  
+
   currentMillis = millis();
   if ((currentMillis - startMillisSerial >= SERIAL_PERIOD)||(firstRun)){
     printDataToSerial(serialData);
@@ -109,7 +104,7 @@ void loop() {
 void printDataToSerial(String serialData[]){
   String message = "@";
   for (int i = 0; i < SERIAL_DATA_ARRAY_SIZE; i++){
-    if (i != SERIAL_DATA_ARRAY_SIZE -1) message += serialData[i] + " , ";
+    if (i != SERIAL_DATA_ARRAY_SIZE -1) message += serialData[i] + ", ";
     else message += serialData[i];
   }
   Serial.println(message);
@@ -124,7 +119,7 @@ void printDataToLCD(int temperature, long ldrResistance){
     B00000,
     B00000,
     B00000,
-    B00000, 
+    B00000,
   };
 
   byte omega[8] = {
@@ -135,12 +130,12 @@ void printDataToLCD(int temperature, long ldrResistance){
     B10001,
     B01010,
     B01010,
-    B11011, 
+    B11011,
   };
-  
+
   lcd.createChar(0, degreeSymbol);
   lcd.createChar(1, omega);
-  
+
   // Update LCD display
   lcd.clear();
   lcd.print(String(String("Temp: ") + String((int)temperature)));
@@ -149,7 +144,7 @@ void printDataToLCD(int temperature, long ldrResistance){
   lcd.setCursor(0,1);
 
   double ldrDouble = ldrResistance;
-  
+
   String prefix = " ";
   if (ldrResistance > 1000000){
     ldrDouble = (ldrResistance) / 1000000.0;
@@ -160,7 +155,7 @@ void printDataToLCD(int temperature, long ldrResistance){
   } else if (ldrResistance < 0){
     prefix = "OL";
   }
-  Serial.println(prefix);
+  //Serial.println(prefix);
   if (prefix.equals("OL")){
     lcd.print(String("LDR: INF"));
     lcd.write(byte(1));
@@ -175,5 +170,5 @@ void printDataToLCD(int temperature, long ldrResistance){
 
 void turnOffLCD(){
   lcd.clear();
-  digitalWrite(LCD_POWER_PIN, LOW); 
+  digitalWrite(LCD_POWER_PIN, LOW);
 }
