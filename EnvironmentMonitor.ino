@@ -9,7 +9,7 @@
 #define MAX_ADC_READING         1023            // max num` on analog to digital converter
 #define ADC_REF_VOLTAGE         5               // max voltage that could appear on ADC
 #define BUTTON_PIN              7               // pin number for button input
-#define SERIAL_DATA_ARRAY_SIZE  3               // how many pieces of data sent to serial
+#define SERIAL_DATA_ARRAY_SIZE  2               // how many pieces of data sent to serial
 
 // Global Variables
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
@@ -89,9 +89,8 @@ void loop() {
 
   // package data to send to serial
   String data0 = String("degrees C: " + String(temperature));
-  String data1 = String("ldr sensor val: " + String(ldrSensorVal));
-  String data2 = String("ldr resistance val: " + String(ldrResistance));
-  String serialData[SERIAL_DATA_ARRAY_SIZE] = {data0, data1, data2};
+  String data1 = String("ldr resistance: " + String(ldrResistance));
+  String serialData[SERIAL_DATA_ARRAY_SIZE] = {data0, data1};
 
   currentMillis = millis();
   if ((currentMillis - startMillisSerial >= SERIAL_PERIOD)||(firstRun)){
